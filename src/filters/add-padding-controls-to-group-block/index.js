@@ -1,0 +1,146 @@
+/**
+ * External Dependencies
+ */
+import classnames from 'classnames';
+import { tailwindcssControls } from '@blockhandbook/tailwindcss-controls';
+const { PaddingControls } = tailwindcssControls;
+
+/**
+ * WordPress Dependencies
+ */
+import { createHigherOrderComponent } from '@wordpress/compose';
+import { InspectorControls } from '@wordpress/block-editor';
+
+/**
+ * Internal Dependencies
+ */
+ import './editor.scss';
+import './style.scss';
+import { config } from '../../../package.json';
+const { slug } = config;
+
+const addPaddingAttributesToGroupBlockType = ( settings, name ) => {
+	let { attributes } = settings;
+
+	if ( name.includes( 'group' ) ) {
+
+		settings.attributes = {
+			...attributes,
+			padding: {
+				type: 'object',
+				default: {
+					top: 10,
+					bottom: 10,
+					left: 10,
+					right: 10,
+					sync: true,
+					usePreset: true,
+					preset: null,
+					toolbar: true,
+					sidebar: true,
+				},
+			},
+		};
+	}
+
+	return settings;
+};
+
+const addPaddingControlsToGroupBlockEdit = createHigherOrderComponent(
+	( BlockEdit ) => {
+		return ( props ) => {
+			const { name } = props;
+
+			if ( name.includes( 'group' ) ) {
+				const {
+					attributes,
+					setAttributes,
+					attributes: { padding },
+				} = props;
+
+				const containerClasses = classnames( {
+					[ `${ padding.preset }` ]: padding.usePreset,
+				} );
+
+				const containerStyle = {
+					'--test-test-padding': ! padding.usePreset
+						? `${ padding.top }px ${ padding.right }px ${ padding.bottom }px ${ padding.left }px`
+						: null,
+				};
+
+				return (
+					<>
+						<div style={ containerStyle }>
+							<BlockEdit
+								className={ containerClasses }
+								{ ...props }
+							/>
+						</div>
+						<PaddingControls
+							slug={ 'test-test' }
+							setAttributes={ setAttributes }
+							attributes={ attributes }
+						/>
+					</>
+				);
+			}
+
+			return <BlockEdit { ...props } />;
+		};
+	},
+	'addPaddingControlsToGroupBlockEdit'
+);
+
+const addPaddingPropertiesToGroupBlockSaveContent = (
+	properties,
+	blockType,
+	attributes
+) => {
+	const { name } = blockType;
+
+	if ( name.includes( 'group' ) ) {
+		const { padding } = attributes;
+		let { style, className } = properties;
+
+		const containerClasses = classnames( {
+			[ `${ padding.preset }` ]: padding.usePreset,
+		} );
+
+		const containerStyle = {
+			'--test-test-padding': ! padding.usePreset
+				? `${ padding.top }px ${ padding.right }px ${ padding.bottom }px ${ padding.left }px`
+				: null,
+		};
+
+		// IMPORTANT!!  In the padding attributes above we set the preset value to null which serves as a flag as to whether a padding setting has been set.  By doing this we are only adding the padding className and styles to newly created group blocks.  If we didn't do this we'd get a block validation issue b/c it would add it to existing group blocks that have been saved or are used in block patterns.
+		if( !! padding.preset ) {
+			properties = {
+				...properties,
+				className: `${ className } ${ containerClasses }`,
+				style: { ...style, ...containerStyle },
+			};
+		}
+	}
+	return properties;
+};
+
+const name = 'add-padding-to-group-block';
+const filters = [
+	{
+		hookName: 'blocks.registerBlockType',
+		namespace: `${ slug }/add-padding-attributes-to-group-block-type`,
+		functionName: addPaddingAttributesToGroupBlockType,
+	},
+	{
+		hookName: 'editor.BlockEdit',
+		namespace: `${ slug }/add-padding-controls-to-group-block-edit`,
+		functionName: addPaddingControlsToGroupBlockEdit,
+	},
+	{
+		hookName: 'blocks.getSaveContent.extraProps',
+		namespace: `${ slug }/add-padding-properties-to-group-block-save-content`,
+		functionName: addPaddingPropertiesToGroupBlockSaveContent,
+	},
+];
+
+export { name, filters };

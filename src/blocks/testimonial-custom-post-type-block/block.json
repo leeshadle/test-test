@@ -1,0 +1,30 @@
+{
+	"name": "test-test/testimonial-custom-post-type-block",
+	"title": "Testimonial Custom Post Type Block",
+	"category": "test-test",
+	"attributes": {
+		"customer": {
+			"type": "string"
+		},
+		"mediaId": {
+			"type": "number"
+		},
+		"mediaUrl": {
+			"type": "string"
+		},
+		"quote": {
+			"type": "string"
+		},
+		"testimonial_meta": {
+			"type": "object",
+			"source": "meta",
+			"meta": "testimonial_meta"
+		}
+	},
+	"editorScript": "file:../../../build/index.js",
+	"style": "file:../../../build/style-index.css",
+	"editorStyle": "file:../../../build/index.css",
+	"supports": {
+
+	}
+}
